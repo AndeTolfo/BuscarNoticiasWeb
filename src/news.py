@@ -1,5 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+
+lista_noticias = []
 
 # Faz a requisição para o site
 response = requests.get('https://g1.globo.com/')
@@ -18,7 +21,11 @@ for noticia in noticias:
 
     if titulo and titulo.get('href'):
         print('Título:', titulo.text.strip())
-        #print('Link:', titulo['href'])
+        print('Link:', titulo['href'])
+
+        # Extrai o tempo de publicação
+        data = noticia.find('span', attrs={'class': 'feed-post-datetime'})
+        print('Publicada:', data.text.strip())
         
         # Extrai todos os resumos da notícia, se houver
         resumos = noticia.findAll('div', attrs={'class': 'bstn-fd-relatedtext'})
@@ -32,9 +39,13 @@ for noticia in noticias:
 
                 print(f'Resumo{qtdResumos}:', resumo.text.strip())
                 qtdResumos += qtdResumos
-
-        # Extrai o tempo de publicação
-        data = noticia.find('span', attrs={'class': 'feed-post-datetime'})
-        print('Publicada:', data.text.strip())
-        
+            lista_noticias.append([titulo.text.strip(), resumo.text.strip(), data.text.strip(), titulo['href']])
+        else: lista_noticias.append([titulo.text.strip(), '', data.text.strip(), titulo['href']])
         print()  # Adiciona uma linha em branco entre as notícias
+
+
+print()
+
+news = pd.DataFrame(lista_noticias, columns=['Título', 'Subtítulo', 'Publicada', 'Link'])
+news.to_excel('News.xlsx', index=False)
+print(news)
